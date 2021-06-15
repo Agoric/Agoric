@@ -38,6 +38,7 @@
  * object with the instance, installation, description, invitation
  * handle, and any custom properties specific to the contract.
  * @property {MakeChargeAccount} makeChargeAccount
+ * @property {GetRunIssuer} getRunIssuer
  */
 
 /**
@@ -272,4 +273,12 @@
  * Create a RUN purse within Zoe that can be used to pay for execution.
  *
  * @returns {ChargeAccount}
+ */
+
+/**
+ * @callback GetRunIssuer
+ *
+ * Get the RUN issuer from Zoe
+ *
+ * @returns {Issuer}
  */

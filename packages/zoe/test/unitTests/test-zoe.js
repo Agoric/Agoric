@@ -6,7 +6,7 @@ import { test } from '@agoric/zoe/tools/prepare-test-env-ava';
 import { E } from '@agoric/eventual-send';
 import { makePromiseKit } from '@agoric/promise-kit';
 import { passStyleOf } from '@agoric/marshal';
-import { makeIssuerKit, AmountMath, AssetKind } from '@agoric/ertp';
+import { AmountMath } from '@agoric/ertp';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import bundleSource from '@agoric/bundle-source';
