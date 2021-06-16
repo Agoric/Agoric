@@ -107,7 +107,7 @@ const makeZoe = (vatAdminSvc, zcfBundleName = undefined) => {
     // The functions below are getters only and have no impact on
     // state within Zoe
     getInvitationIssuer: () => invitationIssuer,
-    getRunIssuer: () => runIssuerKit.issuer,
+    getFeeIssuer: () => runIssuerKit.issuer,
     getBrands,
     getIssuers,
     getTerms,
