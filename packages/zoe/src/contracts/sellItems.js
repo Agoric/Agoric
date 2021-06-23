@@ -13,6 +13,7 @@ import {
 } from '../contractSupport';
 
 import '../../exported';
+import { HIGH_FEE, LOW_FEE, SHORT_EXP } from '../constants';
 
 /**
  * Sell items in exchange for money. Items may be fungible or
@@ -127,7 +128,17 @@ const start = zcf => {
       sellerSeat && !AmountMath.isEmpty(itemsAmount),
       X`no items are for sale`,
     );
-    return zcf.makeInvitation(buy, 'buyer');
+    // expiration date can be short since making a new invitation is
+    // always available
+    // fee should be low
+
+    const invitationConfig = harden({
+      handler: buy,
+      description: 'buyer',
+      expiration: SHORT_EXP,
+      fee: LOW_FEE,
+    });
+    return zcf.makeInvitation(invitationConfig);
   };
 
   /** @type {SellItemsPublicFacet} */
@@ -136,6 +147,13 @@ const start = zcf => {
     getAvailableItemsNotifier,
     getItemsIssuer: () => issuers.Items,
     makeBuyerInvitation,
+  });
+
+  const publicFacetMenu = harden({
+    getAvailableItems: LOW_FEE,
+    getAvailableItemsNotifier: HIGH_FEE,
+    getItemsIssuer: LOW_FEE,
+    makeBuyerInvitation: LOW_FEE,
   });
 
   /** @type {SellItemsCreatorFacet} */
@@ -147,7 +165,12 @@ const start = zcf => {
 
   const creatorInvitation = zcf.makeInvitation(sell, 'seller');
 
-  return harden({ creatorFacet, creatorInvitation, publicFacet });
+  return harden({
+    creatorFacet,
+    creatorInvitation,
+    publicFacet,
+    publicFacetMenu,
+  });
 };
 
 harden(start);

@@ -307,6 +307,8 @@ const start = async zcf => {
     return 'Liquidity successfully removed.';
   };
 
+  // expiration could be quite short, perhaps 10 minutes, as you can
+  // always get a new one.
   const makeAddLiquidityInvitation = () =>
     zcf.makeInvitation(addLiquidityHandler, 'autoswap add liquidity');
 

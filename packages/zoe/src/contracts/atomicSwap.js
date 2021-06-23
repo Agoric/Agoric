@@ -39,14 +39,14 @@ const start = zcf => {
       return swapResult;
     };
 
-    const matchingSeatInvitation = zcf.makeInvitation(
-      matchingSeatOfferHandler,
-      'matchOffer',
-      {
-        asset: give.Asset,
-        price: want.Price,
-      },
-    );
+    const invitationConfig = harden({
+      handler: matchingSeatOfferHandler,
+      description: 'matchOffer',
+      customProps: { asset: give.Asset, price: want.Price },
+      // no expiration date
+      // no fee
+    });
+    const matchingSeatInvitation = zcf.makeInvitation(invitationConfig);
     return matchingSeatInvitation;
   };
 

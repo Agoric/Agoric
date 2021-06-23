@@ -38,7 +38,7 @@
  * object with the instance, installation, description, invitation
  * handle, and any custom properties specific to the contract.
  * @property {MakeChargeAccount} makeChargeAccount
- * @property {GetRunIssuer} getRunIssuer
+ * @property {GetFeeIssuer} getFeeIssuer
  */
 
 /**
@@ -281,7 +281,7 @@
  */
 
 /**
- * @callback GetRunIssuer
+ * @callback GetFeeIssuer
  *
  * Get the RUN issuer from Zoe
  *
@@ -302,7 +302,7 @@
  * @property {GetInstallation} getInstallation
  * @property {GetInvitationDetails} getInvitationDetails
  * @property {MakeChargeAccount} makeChargeAccount
- * @property {GetRunIssuer} getRunIssuer
+ * @property {GetFeeIssuer} getFeeIssuer
  */
 
 /**

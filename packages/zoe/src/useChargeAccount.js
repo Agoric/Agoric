@@ -1,6 +1,7 @@
 // @ts-check
 
 import { E } from '@agoric/eventual-send';
+import { objectMap } from './objArrayConversion';
 
 /**
  * Partially apply an already existing chargeAccount to Zoe methods.
@@ -22,7 +23,7 @@ const applyChargeAccount = (zoe, chargeAccount) => {
     // The functions below are getters only and have no impact on
     // state within Zoe
     getInvitationIssuer: () => E(zoe).getInvitationIssuer(),
-    getRunIssuer: () => E(zoe).getRunIssuer(),
+    getFeeIssuer: () => E(zoe).getFeeIssuer(),
     getBrands: (...args) => E(zoe).getBrands(...args),
     getIssuers: (...args) => E(zoe).getIssuers(...args),
     getTerms: (...args) => E(zoe).getTerms(...args),
@@ -43,6 +44,42 @@ const useChargeAccount = zoe => {
   return applyChargeAccount(zoe, chargeAccount);
 };
 
+/**
+ * Create a new copy of an object that charges a fee according to a
+ * menu before calling the original object's matching method. The menu
+ * acts as an allow-list for which of the object's methods are copied
+ * to the new object.
+ *
+ * @param {Object} obj
+ * @param {ERef<ChargeAccount>} chargeAccount
+ * @param {Menu} menu
+ * @returns {Object}
+ */
+const applyCAToObj = (obj, chargeAccount, menu) => {
+  const chargeFee = (_chargeAccount, _price) => {};
+  const allowedMethodsAndPrices = Object.entries(menu);
+
+  // objectMap hardens, but we want to harden afterward, so we cannot
+  // use it.
+  const wrappedObj = Object.fromEntries(
+    allowedMethodsAndPrices.map(([methodName, price]) => {
+      const fn = (...args) => {
+        chargeFee(chargeAccount, price);
+        // Call the original method with the arguments, after charging
+        // the fee.
+        return E(obj)[methodName](...args);
+      };
+      return [methodName, fn];
+    }),
+  );
+
+  // Add a method to get the menu
+  wrappedObj.getMenu = async () => menu;
+
+  return harden(wrappedObj);
+};
+
 harden(applyChargeAccount);
 harden(useChargeAccount);
-export { applyChargeAccount, useChargeAccount };
+harden(applyCAToObj);
+export { applyChargeAccount, useChargeAccount, applyCAToObj };
