@@ -1,17 +1,16 @@
 // @ts-check
 
 import { E } from '@agoric/eventual-send';
-import { objectMap } from './objArrayConversion';
 
 /**
  * Partially apply an already existing chargeAccount to Zoe methods.
  *
  * @param {ERef<ZoeService>} zoe
  * @param {ERef<ChargeAccount>} chargeAccount
- * @returns {ZoeServiceWChargeAccount}
+ * @returns {{ chargeAccount: ChargeAccount, zoe: ZoeServiceWChargeAccount}}
  */
 const applyChargeAccount = (zoe, chargeAccount) => {
-  return {
+  const wrappedZoe = harden({
     makeChargeAccount: (...args) => E(zoe).makeChargeAccount(...args),
 
     // A chargeAccount is required
@@ -30,14 +29,18 @@ const applyChargeAccount = (zoe, chargeAccount) => {
     getInstance: (...args) => E(zoe).getInstance(...args),
     getInstallation: (...args) => E(zoe).getInstallation(...args),
     getInvitationDetails: (...args) => E(zoe).getInvitationDetails(...args),
-  };
+  });
+  return harden({
+    chargeAccount,
+    zoe: wrappedZoe,
+  });
 };
 
 /**
  * Make a new charge account and then partially apply it to Zoe methods.
  *
  * @param {ZoeService} zoe
- * @returns {ZoeServiceWChargeAccount}
+ * @returns {{ chargeAccount: ChargeAccount, zoe: ZoeServiceWChargeAccount}}
  */
 const useChargeAccount = zoe => {
   const chargeAccount = E(zoe).makeChargeAccount();

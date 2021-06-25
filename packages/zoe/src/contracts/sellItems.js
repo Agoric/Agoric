@@ -132,6 +132,7 @@ const start = zcf => {
     // always available
     // fee should be low
 
+    /** @type {InvitationConfig} */
     const invitationConfig = harden({
       handler: buy,
       description: 'buyer',
@@ -163,7 +164,9 @@ const start = zcf => {
     getItemsIssuer: publicFacet.getItemsIssuer,
   });
 
-  const creatorInvitation = zcf.makeInvitation(sell, 'seller');
+  const creatorInvitation = zcf.makeInvitation(
+    harden({ handler: sell, description: 'seller' }),
+  );
 
   return harden({
     creatorFacet,

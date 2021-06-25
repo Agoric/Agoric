@@ -111,8 +111,7 @@
 /**
  * @callback ZoeInstanceAdminMakeInvitation
  * @param {InvitationHandle} invitationHandle
- * @param {string} description
- * @param {Record<string, any>=} customProperties
+ * @param {InvitationConfig} config
  * @returns {Payment}
  */
 

@@ -50,10 +50,11 @@ const start = zcf => {
     return matchingSeatInvitation;
   };
 
-  const creatorInvitation = zcf.makeInvitation(
-    makeMatchingInvitation,
-    'firstOffer',
-  );
+  const firstOfferConfig = harden({
+    handler: makeMatchingInvitation,
+    description: 'firstOffer',
+  });
+  const creatorInvitation = zcf.makeInvitation(firstOfferConfig);
 
   return { creatorInvitation };
 };

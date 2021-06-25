@@ -29,7 +29,8 @@ import { makeInstallationStorage } from './installationStorage';
  * @param {HasChargeAccount} hasChargeAccount
  * @returns {ZoeStorageManager}
  */
-export const makeZoeStorageManager = (createZCFVat, hasChargeAccount) => {
+export const makeZoeStorageManager = (createZCFVat, hasChargeAccount, translateFee, translateExpirationlenjegbc
+  ) => {
   // issuerStorage contains the issuers that the ZoeService knows
   // about, as well as information about them such as their brand,
   // assetKind, and displayInfo
@@ -158,7 +159,12 @@ export const makeZoeStorageManager = (createZCFVat, hasChargeAccount) => {
         Object.values(instanceRecordManager.getInstanceRecord().terms.issuers),
       );
 
-    const makeInvitation = setupMakeInvitation(instance, installation);
+    const makeInvitation = setupMakeInvitation(
+      instance,
+      installation,
+      translateFee,
+      translationExpiration,
+    );
 
     return harden({
       getTerms: instanceRecordManager.getTerms,

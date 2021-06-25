@@ -8,9 +8,16 @@ export const createInvitationKit = () => {
   /**
    * @param {Instance} instance
    * @param {Installation} installation
+   * @param {(relativeFee: FeeChoice) => { fee: Amount}} translateFee
+   * @param {(relativeExpiration: ExpirationChoice) => { expiration: Timestamp}} translateExpiration
    * @returns {ZoeInstanceAdminMakeInvitation}
    */
-  const setupMakeInvitation = (instance, installation, getFeeTranslation, getExpirationTranslation) => {
+  const setupMakeInvitation = (
+    instance,
+    installation,
+    translateFee,
+    translateExpiration,
+  ) => {
     assert.typeof(instance, 'object');
     assert.typeof(installation, 'object');
 
@@ -23,26 +30,19 @@ export const createInvitationKit = () => {
         X`The description ${config.description} must be a string`,
       );
       // If the contract-provided customProperties include the
-      // properties 'description', 'handle', 'instance' and
-      // 'installation', their corresponding values will be
-      // overwritten with the actual values. For example, the value
-      // for `instance` will always be the actual instance for the
-      // contract, even if customProperties includes a property called
-      // `instance`.
+      // required properties 'description', 'handle', 'instance' and
+      // 'installation', the customProperties values will be
+      // overwritten with the values in the required properties. For
+      // example, the value for `instance` will always be the actual
+      // instance for the contract, even if customProperties includes
+      // a property called `instance`.
 
-      // config can also include
-      // expiration: 'short', 'long'
-      // fee: 'low', 'high'
-      // if not included, no fee and no expiration
+      // `config` can also include the properties 'expiration' and
+      // 'fee'. If these are not included, no fee is quoted and there
+      // is no expiration for the invitation.
 
-      // e.g. 'short' is 10 minutes from now
-      // 'long' is 1 day from now
-      const expiresObj = getExpirationTranslation(config.expiration);
-
-      // e.g. 'low' is $1 (1 display unit of RUN, or 1*10^6)
-      // 'high' is $10
-      // { fee: run1 }
-      const feeObj = getFeeTranslation(config.fee);
+      const expiresObj = translateExpiration(config.expiration);
+      const feeObj = translateFee(config.fee);
 
       const invitationAmount = AmountMath.make(invitationKit.brand, [
         {

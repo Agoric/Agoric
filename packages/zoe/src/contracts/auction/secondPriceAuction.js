@@ -102,7 +102,9 @@ const start = zcf => {
     return Far('offerResult', { makeBidInvitation });
   };
 
-  const creatorInvitation = zcf.makeInvitation(sell, 'sellAssets');
+  const creatorInvitation = zcf.makeInvitation(
+    harden({ handler: sell, description: 'sellAssets' }),
+  );
 
   return harden({ creatorInvitation });
 };
