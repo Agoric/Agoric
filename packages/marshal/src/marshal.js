@@ -4,7 +4,6 @@
 /// <reference types="ses"/>
 
 import { Nat } from '@agoric/nat';
-import { assert, details as X, q } from '@agoric/assert';
 import {
   PASS_STYLE,
   passStyleOf,
@@ -15,6 +14,8 @@ import {
 } from './passStyleOf.js';
 
 import './types.js';
+
+const { details: X, quote: q } = assert;
 
 const {
   getPrototypeOf,
@@ -523,7 +524,9 @@ export function makeMarshal(
               errorId === undefined
                 ? `Remote${EC.name}`
                 : `Remote${EC.name}(${errorId})`;
-            const error = assert.error(`${message}`, EC, { errorName });
+            const error = assert.error(`${message}`, EC);
+            // TODO How did it ever work?
+            error.name = errorName;
             return error;
           }
 

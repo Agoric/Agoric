@@ -2,9 +2,10 @@
 
 // @ts-check
 
-import { assert, details as X, q } from '@agoric/assert';
 import { isEmptyNonRemotableObject } from './helpers.js';
 import './types.js';
+
+const { details: X, quote: q } = assert;
 
 /**
  * @template {Record<any, any>} K

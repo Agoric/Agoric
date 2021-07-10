@@ -1,8 +1,8 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { test } from '@agoric/swingset-vat/tools/prepare-test-env-ava.js';
-
-import { assert, details as X } from '@agoric/assert';
 import { wrapInescapableCompartment } from '../src/compartment-wrapper.js';
+
+const { details: X } = assert;
 
 // We build a transform that allows oldSrc to increment the odometer, but not
 // read it. Note, of course, that SES provides a far easier way to accomplish
