@@ -663,3 +663,26 @@ test('XS vatKeeper defaultManagerType', async t => {
   k.createStartingKernelState('xs-worker');
   t.is(k.getDefaultManagerType(), 'xs-worker');
 });
+
+test('meters', async t => {
+  const { kvStore, streamStore } = buildKeeperStorageInMemory();
+  const k = makeKernelKeeper(kvStore, streamStore);
+  k.createStartingKernelState('local');
+  const m1 = k.allocateMeter(100n, 10n);
+  const m2 = k.allocateMeter(200n, 150n);
+  t.not(m1, m2);
+  k.deleteMeter(m2);
+  t.deepEqual(k.deductMeter(m1, 10n), { underflow: false, notify: false });
+  t.deepEqual(k.deductMeter(m1, 10n), { underflow: false, notify: false });
+  t.deepEqual(k.deductMeter(m1, 70n), { underflow: false, notify: false });
+  t.deepEqual(k.deductMeter(m1, 1n), { underflow: false, notify: true });
+  t.deepEqual(k.deductMeter(m1, 1n), { underflow: false, notify: false });
+  t.deepEqual(k.deductMeter(m1, 9n), { underflow: true, notify: false });
+  k.setMeter(m1, { remaining: 50n });
+  t.deepEqual(k.deductMeter(m1, 30n), { underflow: false, notify: false });
+  t.deepEqual(k.deductMeter(m1, 25n), { underflow: true, notify: true });
+
+  k.setMeter(m1, { remaining: 50n, notifyThreshold: 40n });
+  t.deepEqual(k.deductMeter(m1, 10n), { underflow: false, notify: false });
+  t.deepEqual(k.deductMeter(m1, 10n), { underflow: false, notify: true });
+});
