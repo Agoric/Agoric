@@ -1,0 +1,75 @@
+@startuml governance invitation linkages
+
+class "Registrar\n(In a Vat)" as Registrar {
+    Questions[]
+    terms: committeeSize...
+    +questionNotifier()
+    +getOpenQuestions()
+    +getInstance()
+    +getBallot()
+    #getVoterInvitation()
+    -addQuestion(ballotCounterInstall, question, details)
+}
+
+note "produces VoterInvitations.\nunaware of BallotCounters." as N1
+Registrar .. N1
+
+class "BallotCounter\n(In a Vat)" as BallotCounter {
+    terms\n   {ballotSpec, quorum, closingRule, tieOutcome}
+    --
+    +getDetails()
+    +getOutcome()
+    +getStats()
+    #countVotes()
+    -submitVote()
+    -getVoterFacet()
+}
+
+note "unaware of voter registration.\n Only Registrar hands out voterFacets" as N2
+BallotCounter .. N2
+
+class BallotDetails {
+    handle
+    ballotSpec
+    counterInstance
+    closingRule: {timer, deadline}
+
+    choose(position...)
+}
+
+object BallotSpec {
+    Method { CHOOSE_N | ORDER | WEIGHT }
+    Type { ParamChange | Election | Survey }
+    --
+    question
+    positions
+    maxChoices
+}
+
+BallotDetails ..> BallotSpec
+
+class "ElectionManager\n(in a Vat)" as ElectionManager {
+    Registrar
+    addQuestion()
+}
+
+class VoterFacet {
+    castBallot(template)
+}
+
+object VoterInvitation {
+    Registrar
+    --
+    getVoterFacet()
+}
+
+ElectionManager --|> Registrar
+
+Registrar --> VoterInvitation
+Registrar --|> BallotCounter
+Registrar --|> VoterFacet
+VoterInvitation -> VoterFacet
+VoterFacet -> BallotDetails
+BallotCounter <|--|> BallotDetails
+
+@enduml
