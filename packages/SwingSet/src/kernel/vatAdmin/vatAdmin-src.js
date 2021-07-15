@@ -20,10 +20,30 @@
 import { Far } from '@agoric/marshal';
 
 export function buildRootDeviceNode({ endowments, serialize }) {
-  const { pushCreateVatEvent, terminate: kernelTerminateVatFn } = endowments;
+  const {
+    pushCreateVatEvent,
+    terminate: kernelTerminateVatFn,
+    meterCreate,
+    meterSetRemaining,
+    meterGetRemaining,
+    meterSetNotifyThreshold,
+  } = endowments;
 
   // The Root Device Node.
   return Far('root', {
+    createMeter() {
+      return meterCreate();
+    },
+    setRemaining(meterID, remaining) {
+      meterSetRemaining(meterID, remaining);
+    },
+    getRemaining(meterID) {
+      return meterGetRemaining(meterID);
+    },
+    setNotifyThreshold(meterID, threshold) {
+      meterSetNotifyThreshold(meterID, threshold);
+    },
+
     // Called by the wrapper vat to create a new vat. Gets a new ID from the
     // kernel's vat creator fn. Remember that the root object will arrive
     // separately. Clean up the outgoing and incoming arguments.

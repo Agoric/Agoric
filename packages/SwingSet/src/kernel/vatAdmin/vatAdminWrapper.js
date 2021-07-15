@@ -6,6 +6,7 @@
  * device affordances into objects that can be used by code in other vats.
  */
 import { makePromiseKit } from '@agoric/promise-kit';
+import { makeNotifierKit } from '@agoric/notifier';
 import { Far } from '@agoric/marshal';
 
 function producePRR() {
@@ -17,6 +18,22 @@ export function buildRootObject(vatPowers) {
   const { D } = vatPowers;
   const pending = new Map(); // vatID -> { resolve, reject } for promise
   const running = new Map(); // vatID -> { resolve, reject } for doneP
+  const meterByID = new Map(); // meterID -> { meter, updater }
+  const meterIDByMeter = new WeakMap(); // meter -> meterID
+
+  function makeMeter(vatAdminNode) {
+    const meterID = D(vatAdminNode).createMeter();
+    const { updater, notifier } = makeNotifierKit();
+    const meter = Far('meter', {
+      setRemaining: remaining =>
+        D(vatAdminNode).setRemaining(meterID, Nat(remaining)),
+      getRemaining: () => D(vatAdminNode).getRemaining(meterID),
+      setNotifyThreshold: threshold =>
+        D(vatAdminNode).setNotifyThreshold(meterID, Nat(threshold)),
+      getNotifier: () => notifier,
+    });
+    return { meterID, meter, updater };
+  }
 
   function finishVatCreation(vatAdminNode, vatID) {
     const [promise, pendingRR] = producePRR();
@@ -39,14 +56,34 @@ export function buildRootObject(vatPowers) {
     });
   }
 
+  function convertOptions(origOptions) {
+    const options = { ...origOptions };
+    delete options.meterID;
+    delete options.meter;
+    if (origOptions.meter) {
+      const meterID = meterIDByMeter.get(origOptions.meter);
+      options.meterID = meterID;
+    }
+    return harden(options);
+  }
+
   function createVatAdminService(vatAdminNode) {
     return Far('vatAdminService', {
+      createMeter(remaining, notifyThreshold) {
+        const { meterID, meter, updater } = makeMeter(vatAdminNode);
+        meterByID.set(meterID, harden({ meter, updater }));
+        meterIDByMeter.set(meter, meterID);
+        return meter;
+      },
       createVat(code, options) {
-        const vatID = D(vatAdminNode).create(code, options);
+        const vatID = D(vatAdminNode).create(code, convertOptions(options));
         return finishVatCreation(vatAdminNode, vatID);
       },
       createVatByName(bundleName, options) {
-        const vatID = D(vatAdminNode).createByName(bundleName, options);
+        const vatID = D(vatAdminNode).createByName(
+          bundleName,
+          convertOptions(options),
+        );
         return finishVatCreation(vatAdminNode, vatID);
       },
     });
@@ -61,6 +98,11 @@ export function buildRootObject(vatPowers) {
     } else {
       reject(Error(`Vat Creation Error: ${results.error}`));
     }
+  }
+
+  function meterCrossedThreshold(meterID, remaining) {
+    const { updater } = meterByID.get(meterID);
+    updater.updateState(remaining);
   }
 
   // the kernel sends this when the vat halts
@@ -85,5 +127,6 @@ export function buildRootObject(vatPowers) {
     createVatAdminService,
     newVatCallback,
     vatTerminated,
+    meterCrossedThreshold,
   });
 }
