@@ -102,18 +102,18 @@ test('reject unmarked empty objects', t => {
   // getInterfaceOf(). To catch older clients that need to be updated, we
   // reject the use of plain empty objects as keys.
 
-  const k = harden({});
+  const k = harden(Promise.resolve());
   const s = makeStore('store1');
-  t.throws(() => s.init(k, 1), { message: /"store1" bad key:/ });
-  t.throws(() => s.has(k), { message: /"store1" bad key:/ });
-  t.throws(() => s.get(k), { message: /"store1" bad key:/ });
-  t.throws(() => s.set(k, 1), { message: /"store1" bad key:/ });
-  t.throws(() => s.delete(k), { message: /"store1" bad key:/ });
+  t.throws(() => s.init(k, 1), { message: /not comparable/ });
+  t.throws(() => s.has(k), { message: /not comparable/ });
+  t.throws(() => s.get(k), { message: /not comparable/ });
+  t.throws(() => s.set(k, 1), { message: /not comparable/ });
+  t.throws(() => s.delete(k), { message: /not comparable/ });
 
   const w = makeWeakStore('store1');
-  t.throws(() => w.init(k, 1), { message: /"store1" bad key:/ });
-  t.throws(() => w.has(k), { message: /"store1" bad key:/ });
-  t.throws(() => w.get(k), { message: /"store1" bad key:/ });
-  t.throws(() => w.set(k, 1), { message: /"store1" bad key:/ });
-  t.throws(() => w.delete(k), { message: /"store1" bad key:/ });
+  t.throws(() => w.init(k, 1), { message: /not comparable/ });
+  t.throws(() => w.has(k), { message: /not comparable/ });
+  t.throws(() => w.get(k), { message: /not comparable/ });
+  t.throws(() => w.set(k, 1), { message: /not comparable/ });
+  t.throws(() => w.delete(k), { message: /not comparable/ });
 });
