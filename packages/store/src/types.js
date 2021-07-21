@@ -6,7 +6,8 @@
  */
 
 /**
- * @template K,V
+ * @template {Comparable} K
+ * @template {Passable} V
  * @typedef {Object} Store - A safety wrapper around a Map
  * @property {(key: K) => boolean} has - Check if a key exists
  * @property {(key: K, value: V) => void} init - Initialize the key only if it
@@ -22,7 +23,8 @@
  */
 
 /**
- * @template K,V
+ * @template {Comparable} K
+ * @template {Passable} V
  * @typedef {Object} WeakStore - A safety wrapper around a WeakMap
  * @property {(key: any) => boolean} has - Check if a key exists
  * @property {(key: K, value: V) => void} init - Initialize the key only if it
