@@ -29,6 +29,9 @@ const { ownKeys } = Reflect;
 
 export const PASS_STYLE = Symbol.for('passStyle');
 
+// TODO: Maintenance hazard: Coordinate with the list of errors in the SES
+// whilelist. Currently, both omit AggregateError, which is now standard. Both
+// must eventually include it.
 const errorConstructors = new Map([
   ['Error', Error],
   ['EvalError', EvalError],
@@ -39,9 +42,8 @@ const errorConstructors = new Map([
   ['URIError', URIError],
 ]);
 
-export function getErrorConstructor(name) {
-  return errorConstructors.get(name);
-}
+export const getErrorConstructor = name => errorConstructors.get(name);
+harden(getErrorConstructor);
 
 /**
  * For most of these classification tests, we do strict validity `assert`s,
@@ -51,10 +53,13 @@ export function getErrorConstructor(name) {
  * to do so, we prefer to let the error test succeed and to couch these
  * complaints as notes on the error.
  *
+ * TODO: BUG: SECURITY: Making this tolerant of malformed errors conflicts with
+ * having passStyleOf be validating.
+ *
  * @param {Passable} val
  * @returns {boolean}
  */
-function isPassByCopyError(val) {
+const isPassByCopyError = val => {
   // TODO: Need a better test than instanceof
   if (!(val instanceof Error)) {
     return false;
@@ -96,13 +101,14 @@ function isPassByCopyError(val) {
     }
   }
   return true;
-}
+};
 
 /**
  * @param {Passable} val
+ * @param { Set<Passable> } inProgress
  * @returns {boolean}
  */
-function isPassByCopyArray(val) {
+const isPassByCopyArray = (val, inProgress) => {
   if (!Array.isArray(val)) {
     return false;
   }
@@ -131,6 +137,9 @@ function isPassByCopyArray(val) {
       X`Array elements must be enumerable: ${q(i)}`,
       TypeError,
     );
+    // Recursively validate that each member is passable.
+    // eslint-disable-next-line no-use-before-define
+    passStyleOfRecur(desc.value, inProgress);
   }
   assert(
     ownKeys(descs).length === len + 1,
@@ -138,13 +147,14 @@ function isPassByCopyArray(val) {
     TypeError,
   );
   return true;
-}
+};
 
 /**
  * @param {Passable} val
+ * @param { Set<Passable> } inProgress
  * @returns {boolean}
  */
-function isPassByCopyRecord(val) {
+const isPassByCopyRecord = (val, inProgress) => {
   const proto = getPrototypeOf(val);
   if (proto !== objectPrototype) {
     return false;
@@ -178,9 +188,12 @@ function isPassByCopyRecord(val) {
       X`Record fields must be enumerable: ${q(descKey)}`,
       TypeError,
     );
+    // Recursively validate that each member is passable.
+    // eslint-disable-next-line no-use-before-define
+    passStyleOfRecur(desc.value, inProgress);
   }
   return true;
-}
+};
 
 // Below we have a series of predicate functions and their (curried) assertion
 // functions. The semantics of the assertion function is just to assert that
@@ -223,9 +236,8 @@ const checkIface = (iface, check = x => x) => {
 /**
  * @param {InterfaceSpec} iface
  */
-const assertIface = iface => checkIface(iface, assertChecker);
+export const assertIface = iface => checkIface(iface, assertChecker);
 harden(assertIface);
-export { assertIface };
 
 /**
  * TODO: It would be nice to typedef this shape, but we can't declare a type
@@ -304,7 +316,7 @@ const checkRemotableProto = (val, check = x => x, original = undefined) => {
  * @param {Checker} [check]
  * @returns {boolean}
  */
-function checkCanBeRemotable(val, check = x => x) {
+const checkCanBeRemotable = (val, check = x => x) => {
   if (
     !(
       check(
@@ -340,24 +352,22 @@ function checkCanBeRemotable(val, check = x => x) {
         X`A pass-by-remote cannot shadow ${q(PASS_STYLE)}`,
       ),
   );
-}
+};
 
-const canBeRemotable = val => checkCanBeRemotable(val);
+export const canBeRemotable = val => checkCanBeRemotable(val);
 harden(canBeRemotable);
-export { canBeRemotable };
 
-const assertCanBeRemotable = val => {
+export const assertCanBeRemotable = val => {
   checkCanBeRemotable(val, assertChecker);
 };
 harden(assertCanBeRemotable);
-export { assertCanBeRemotable };
 
 /**
  * @param {Remotable} val
  * @param {Checker} [check]
  * @returns {boolean}
  */
-function checkRemotable(val, check = x => x) {
+const checkRemotable = (val, check = x => x) => {
   const not = (cond, details) => !check(cond, details);
   if (not(isFrozen(val), X`cannot serialize non-frozen objects like ${val}`)) {
     return false;
@@ -371,7 +381,7 @@ function checkRemotable(val, check = x => x) {
     return true;
   }
   return checkRemotableProto(p, check, val);
-}
+};
 
 /**
  * @param {Remotable} val
@@ -381,7 +391,7 @@ const assertRemotable = val => {
 };
 
 /** @type {MarshalGetInterfaceOf} */
-const getInterfaceOf = val => {
+export const getInterfaceOf = val => {
   if (
     typeof val !== 'object' ||
     val === null ||
@@ -393,7 +403,101 @@ const getInterfaceOf = val => {
   return val[Symbol.toStringTag];
 };
 harden(getInterfaceOf);
-export { getInterfaceOf };
+
+/**
+ * @param { Passable } val
+ * @param { Set<Passable> } inProgress
+ * @returns { PassStyle }
+ */
+const passStyleOfInternal = (val, inProgress) => {
+  const typestr = typeof val;
+  switch (typestr) {
+    case 'object': {
+      if (getInterfaceOf(val)) {
+        return 'remotable';
+      }
+      if (val === null) {
+        return 'null';
+      }
+      assert(
+        isFrozen(val),
+        X`Cannot pass non-frozen objects like ${val}. Use harden()`,
+      );
+      if (isPromise(val)) {
+        return 'promise';
+      }
+      assert(
+        typeof val.then !== 'function',
+        X`Cannot pass non-promise thenables`,
+      );
+      if (isPassByCopyError(val)) {
+        return 'copyError';
+      }
+      if (isPassByCopyArray(val, inProgress)) {
+        return 'copyArray';
+      }
+      if (isPassByCopyRecord(val, inProgress)) {
+        return 'copyRecord';
+      }
+      assertRemotable(val);
+      // console.log(`--- @@marshal: pass-by-ref object without Far/Remotable`);
+      // assert.fail(X`pass-by-ref object without Far/Remotable`);
+      return 'remotable';
+    }
+    case 'function': {
+      assert.fail(X`Bare functions like ${val} are disabled for now`);
+    }
+    case 'undefined':
+    case 'string':
+    case 'boolean':
+    case 'number':
+    case 'bigint':
+    case 'symbol': {
+      return typestr;
+    }
+    default: {
+      assert.fail(X`Unrecognized typeof ${q(typestr)}`, TypeError);
+    }
+  }
+};
+
+/**
+ * Purely for performance. However it is mutable static state, and
+ * it does have some observability on proxies. TODO need to assess
+ * whether this creates a static communications channel.
+ *
+ * passStyleOf does a full recursive walk of pass-by-copy
+ * structures, in order to validate that they are acyclic. In addition
+ * it is used by other algorithms to recursively walk these pass-by-copy
+ * structures, so without this cache, these algorithms could be
+ * O(N**2) or worse.
+ *
+ * @type {WeakMap<Passable, PassStyle>}
+ */
+const passStyleOfCache = new WeakMap();
+
+/**
+ * @param { Passable } val
+ * @param { Set<Passable> } inProgress
+ * @returns { PassStyle }
+ */
+const passStyleOfRecur = (val, inProgress) => {
+  const isObject = Object(val) === val;
+  if (isObject) {
+    if (passStyleOfCache.has(val)) {
+      // @ts-ignore
+      return passStyleOfCache.get(val);
+    }
+    assert(!inProgress.has(val), X`Pass-by-copy data cannot be cyclic ${val}`);
+    inProgress.add(val);
+  }
+  const passStyle = passStyleOfInternal(val, inProgress);
+  if (isObject) {
+    passStyleOfCache.set(val, passStyle);
+    inProgress.delete(val);
+  }
+  return passStyle;
+};
 
 /**
  * objects can only be passed in one of two/three forms:
@@ -428,54 +532,9 @@ export { getInterfaceOf };
  * @param {Passable} val
  * @returns {PassStyle}
  */
-export function passStyleOf(val) {
-  const typestr = typeof val;
-  switch (typestr) {
-    case 'object': {
-      if (getInterfaceOf(val)) {
-        return 'remotable';
-      }
-      if (val === null) {
-        return 'null';
-      }
-      assert(
-        isFrozen(val),
-        X`Cannot pass non-frozen objects like ${val}. Use harden()`,
-      );
-      if (isPromise(val)) {
-        return 'promise';
-      }
-      assert(
-        typeof val.then !== 'function',
-        X`Cannot pass non-promise thenables`,
-      );
-      if (isPassByCopyError(val)) {
-        return 'copyError';
-      }
-      if (isPassByCopyArray(val)) {
-        return 'copyArray';
-      }
-      if (isPassByCopyRecord(val)) {
-        return 'copyRecord';
-      }
-      assertRemotable(val);
-      // console.log(`--- @@marshal: pass-by-ref object without Far/Remotable`);
-      // assert.fail(X`pass-by-ref object without Far/Remotable`);
-      return 'remotable';
-    }
-    case 'function': {
-      assert.fail(X`Bare functions like ${val} are disabled for now`);
-    }
-    case 'undefined':
-    case 'string':
-    case 'boolean':
-    case 'number':
-    case 'bigint':
-    case 'symbol': {
-      return typestr;
-    }
-    default: {
-      assert.fail(X`Unrecognized typeof ${q(typestr)}`, TypeError);
-    }
-  }
-}
+export const passStyleOf = val =>
+  // Even when a WeakSet is correct, when the set has a shorter lifetime
+  // than its keys, we prefer a Set due to expected implementation
+  // tradeoffs.
+  passStyleOfRecur(val, new Set());
+harden(passStyleOf);
