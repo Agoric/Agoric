@@ -6,6 +6,16 @@ import { assert, details as X, q } from '@agoric/assert';
 import { passStyleOf } from '@agoric/marshal';
 import { mustBeComparable } from '../../same-structure';
 
+const assertKey = key => {
+  harden(key); // TODO: Just a transition kludge. Remove when possible.
+  mustBeComparable(key);
+};
+
+const assertValue = value => {
+  harden(value); // TODO: Just a transition kludge. Remove when possible.
+  passStyleOf(value); // asserts that value is passable
+};
+
 /**
  * Distinguishes between adding a new key (init) and updating or
  * referencing a key (get, set, delete).
@@ -25,28 +35,28 @@ export function makeStore(keyName = 'key') {
     assert(store.has(key), X`${q(keyName)} not found: ${key}`);
   return harden({
     has: key => {
-      mustBeComparable(key);
+      assertKey(key);
       return store.has(key);
     },
     init: (key, value) => {
-      mustBeComparable(key);
-      passStyleOf(value);
+      assertKey(key);
+      assertValue(value);
       assertKeyDoesNotExist(key);
       store.set(key, value);
     },
     get: key => {
-      mustBeComparable(key);
+      assertKey(key);
       assertKeyExists(key);
       return store.get(key);
     },
     set: (key, value) => {
-      mustBeComparable(key);
-      passStyleOf(value);
+      assertKey(key);
+      assertValue(value);
       assertKeyExists(key);
       store.set(key, value);
     },
     delete: key => {
-      mustBeComparable(key);
+      assertKey(key);
       assertKeyExists(key);
       store.delete(key);
     },
