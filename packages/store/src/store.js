@@ -3,7 +3,7 @@
 // @ts-check
 
 import { assert, details as X, q } from '@agoric/assert';
-import { passStyleOf } from '@agoric/marshal';
+import { passStyleOf, Far } from '@agoric/marshal';
 import { mustBeComparable } from '../../same-structure';
 
 const assertKey = (key, passableOnly) => {
@@ -39,7 +39,7 @@ export function makeStore(keyName = 'key', { passableOnly = true } = {}) {
     assert(!store.has(key), X`${q(keyName)} already registered: ${key}`);
   const assertKeyExists = key =>
     assert(store.has(key), X`${q(keyName)} not found: ${key}`);
-  return harden({
+  return Far('store', {
     has: key => {
       assertKey(key, passableOnly);
       return store.has(key);

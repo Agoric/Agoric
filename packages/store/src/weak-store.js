@@ -3,7 +3,7 @@
 // @ts-check
 
 import { assert, details as X, q } from '@agoric/assert';
-import { passStyleOf } from '@agoric/marshal';
+import { passStyleOf, Far } from '@agoric/marshal';
 import { mustBeComparable } from '../../same-structure';
 import './types.js';
 
@@ -35,7 +35,7 @@ export function makeWeakStore(keyName = 'key', { passableOnly = true } = {}) {
     assert(!wm.has(key), X`${q(keyName)} already registered: ${key}`);
   const assertKeyExists = key =>
     assert(wm.has(key), X`${q(keyName)} not found: ${key}`);
-  return harden({
+  return Far('weakStore', {
     has: key => {
       assertKey(key, passableOnly);
       return wm.has(key);
