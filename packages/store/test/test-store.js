@@ -5,14 +5,7 @@ import { test } from '@agoric/swingset-vat/tools/prepare-test-env-ava';
 
 import { Far } from '@agoric/marshal';
 import { makeStore, makeWeakStore } from '../src/index.js';
-import { isEmptyNonRemotableObject } from '../src/helpers.js';
 import '../src/types.js';
-
-test('empty object check', t => {
-  const f = isEmptyNonRemotableObject;
-  t.truthy(f(harden({})));
-  t.falsy(f(Far()));
-});
 
 function check(t, mode, objMaker) {
   // Check the full API, and make sure object identity isn't a problem by

@@ -1,3 +1,5 @@
+// @ts-check
+
 // eslint-disable-next-line spaced-comment
 /// <reference types="ses"/>
 
@@ -43,7 +45,8 @@
  * `init` is only allowed if the key does not already exist. `Get`,
  * `set` and `delete` are only allowed if the key does already exist.
  *
- * @template K,V
+ * @template {Comparable} K
+ * @template {Passable} V
  * @callback MakeWeakStore
  * @param {string} [keyName='key'] - the column name for the key
  * @returns {WeakStore<K,V>}

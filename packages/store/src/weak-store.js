@@ -3,7 +3,8 @@
 // @ts-check
 
 import { assert, details as X, q } from '@agoric/assert';
-import { isEmptyNonRemotableObject } from './helpers.js';
+import { passStyleOf } from '@agoric/marshal';
+import { mustBeComparable } from '../../same-structure';
 import './types.js';
 
 /**
@@ -18,30 +19,30 @@ export function makeWeakStore(keyName = 'key') {
     assert(!wm.has(key), X`${q(keyName)} already registered: ${key}`);
   const assertKeyExists = key =>
     assert(wm.has(key), X`${q(keyName)} not found: ${key}`);
-  const assertNotBadKey = key =>
-    assert(!isEmptyNonRemotableObject(key), X`${q(keyName)} bad key: ${key}`);
   return harden({
     has: key => {
-      assertNotBadKey(key);
+      mustBeComparable(key);
       return wm.has(key);
     },
     init: (key, value) => {
-      assertNotBadKey(key);
+      mustBeComparable(key);
+      passStyleOf(value);
       assertKeyDoesNotExist(key);
       wm.set(key, value);
     },
     get: key => {
-      assertNotBadKey(key);
+      mustBeComparable(key);
       assertKeyExists(key);
       return wm.get(key);
     },
     set: (key, value) => {
-      assertNotBadKey(key);
+      mustBeComparable(key);
+      passStyleOf(value);
       assertKeyExists(key);
       wm.set(key, value);
     },
     delete: key => {
-      assertNotBadKey(key);
+      mustBeComparable(key);
       assertKeyExists(key);
       wm.delete(key);
     },
