@@ -5,14 +5,7 @@ import { test } from '@agoric/swingset-vat/tools/prepare-test-env-ava';
 
 import { Far } from '@agoric/marshal';
 import { makeStore, makeWeakStore } from '../src/index.js';
-import { isEmptyNonRemotableObject } from '../src/helpers.js';
 import '../src/types.js';
-
-test('empty object check', t => {
-  const f = isEmptyNonRemotableObject;
-  t.truthy(f(harden({})));
-  t.falsy(f(Far()));
-});
 
 function check(t, mode, objMaker) {
   // Check the full API, and make sure object identity isn't a problem by
@@ -109,18 +102,18 @@ test('reject unmarked empty objects', t => {
   // getInterfaceOf(). To catch older clients that need to be updated, we
   // reject the use of plain empty objects as keys.
 
-  const k = harden({});
+  const k = harden(Promise.resolve());
   const s = makeStore('store1');
-  t.throws(() => s.init(k, 1), { message: /"store1" bad key:/ });
-  t.throws(() => s.has(k), { message: /"store1" bad key:/ });
-  t.throws(() => s.get(k), { message: /"store1" bad key:/ });
-  t.throws(() => s.set(k, 1), { message: /"store1" bad key:/ });
-  t.throws(() => s.delete(k), { message: /"store1" bad key:/ });
+  t.throws(() => s.init(k, 1), { message: /not comparable/ });
+  t.throws(() => s.has(k), { message: /not comparable/ });
+  t.throws(() => s.get(k), { message: /not comparable/ });
+  t.throws(() => s.set(k, 1), { message: /not comparable/ });
+  t.throws(() => s.delete(k), { message: /not comparable/ });
 
   const w = makeWeakStore('store1');
-  t.throws(() => w.init(k, 1), { message: /"store1" bad key:/ });
-  t.throws(() => w.has(k), { message: /"store1" bad key:/ });
-  t.throws(() => w.get(k), { message: /"store1" bad key:/ });
-  t.throws(() => w.set(k, 1), { message: /"store1" bad key:/ });
-  t.throws(() => w.delete(k), { message: /"store1" bad key:/ });
+  t.throws(() => w.init(k, 1), { message: /not comparable/ });
+  t.throws(() => w.has(k), { message: /not comparable/ });
+  t.throws(() => w.get(k), { message: /not comparable/ });
+  t.throws(() => w.set(k, 1), { message: /not comparable/ });
+  t.throws(() => w.delete(k), { message: /not comparable/ });
 });

@@ -31,7 +31,10 @@ const IMPLODE_PREFIX = 'IE:';
 export const makeDehydrator = (initialUnnamedCount = 0) => {
   let unnamedCount = initialUnnamedCount;
 
-  const petnameKindToMapping = makeStore('petnameKind');
+  const petnameKindToMapping = makeStore(
+    'petnameKind',
+    { passableOnly: false }, // because Mappings mix functions and data
+  );
 
   /** @type {string[]} */
   const searchOrder = [];

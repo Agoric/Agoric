@@ -219,7 +219,10 @@ export function getPrefixes(addr) {
  */
 export function makeNetworkProtocol(protocolHandler) {
   /** @type {Store<Port, Set<Closable>>} */
-  const currentConnections = makeStore('port');
+  const currentConnections = makeStore(
+    'port',
+    { passableOnly: false }, // because we're storing a JS Set
+  );
 
   /**
    * Currently must be a single listenHandler.
@@ -494,7 +497,7 @@ export function makeNetworkProtocol(protocolHandler) {
   E(protocolHandler).onCreate(protocolImpl, protocolHandler);
 
   // Return the user-facing protocol.
-  return harden({ bind });
+  return Far('binder', { bind });
 }
 
 /**

@@ -1,3 +1,5 @@
+// @ts-check
+
 // eslint-disable-next-line spaced-comment
 /// <reference types="ses"/>
 
@@ -6,7 +8,8 @@
  */
 
 /**
- * @template K,V
+ * @template {Comparable} K
+ * @template {Passable} V
  * @typedef {Object} Store - A safety wrapper around a Map
  * @property {(key: K) => boolean} has - Check if a key exists
  * @property {(key: K, value: V) => void} init - Initialize the key only if it
@@ -22,7 +25,8 @@
  */
 
 /**
- * @template K,V
+ * @template {Comparable} K
+ * @template {Passable} V
  * @typedef {Object} WeakStore - A safety wrapper around a WeakMap
  * @property {(key: any) => boolean} has - Check if a key exists
  * @property {(key: K, value: V) => void} init - Initialize the key only if it
@@ -41,7 +45,8 @@
  * `init` is only allowed if the key does not already exist. `Get`,
  * `set` and `delete` are only allowed if the key does already exist.
  *
- * @template K,V
+ * @template {Comparable} K
+ * @template {Passable} V
  * @callback MakeWeakStore
  * @param {string} [keyName='key'] - the column name for the key
  * @returns {WeakStore<K,V>}
@@ -73,6 +78,12 @@
  */
 
 /**
+ * @template {ExternalInstance} T
+ * @typedef {Remotable} Hydrater
+ * @property {(data: HydrateData) => T} hydrate
+ */
+
+/**
  * An external store that decouples the closure data from the returned
  * "representative" instance.
  *
@@ -81,7 +92,7 @@
  * @callback MakeHydrateExternalStore
  * @param {string} instanceKind
  * @param {(...args: A) => HydrateData} adaptArguments
- * @param {(init?: HydrateInit) => (data: HydrateData) => T} makeHydrate
+ * @param {(init?: HydrateInit) => Hydrater<T>} makeHydrater
  * @returns {ExternalStore<(...args: A) => T>}
  */
 

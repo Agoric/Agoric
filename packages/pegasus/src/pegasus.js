@@ -234,7 +234,7 @@ const makeCourier = ({
     return undefined;
   };
 
-  return { send, receive };
+  return Far('courier', { send, receive });
 };
 
 /**
@@ -258,7 +258,10 @@ const makePegasus = (zcf, board, namesByAddress) => {
   /**
    * @type {WeakStore<Connection, LocalDenomState>}
    */
-  const connectionToLocalDenomState = makeWeakStore('Connection');
+  const connectionToLocalDenomState = makeWeakStore(
+    'Connection',
+    { passableOnly: false }, // Because the value contains a JS Set
+  );
 
   let lastLocalIssuerNonce = 0;
   /**
@@ -291,7 +294,7 @@ const makePegasus = (zcf, board, namesByAddress) => {
    */
   const makePeg = (c, desc, pegs) => {
     /** @type {Peg} */
-    const peg = harden({
+    const peg = Far('peg', {
       getAllegedName() {
         return desc.allegedName;
       },
