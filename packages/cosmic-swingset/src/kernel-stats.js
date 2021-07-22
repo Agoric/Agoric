@@ -102,12 +102,18 @@ export function makeSlogCallbacks({ metricMeter, labels }) {
             metric;
           }
           // Refresh the metric group.
-          nameToMetric = makeStore('metricName');
+          nameToMetric = makeStore(
+            'metricName',
+            { passableOnly: false }, // Does not seem to be a passable
+          );
           groupToMetrics.set(groupKey, [nameToMetric, instanceKey]);
         }
       }
     } else {
-      nameToMetric = makeStore('metricName');
+      nameToMetric = makeStore(
+        'metricName',
+        { passableOnly: false }, // Does not seem to be a passable
+      );
       groupToMetrics.init(groupKey, [nameToMetric, instanceKey]);
     }
 
