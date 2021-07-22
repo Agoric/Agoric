@@ -53,7 +53,10 @@ const recordToKey = record =>
   );
 
 export function makeSlogCallbacks({ metricMeter, labels }) {
-  const nameToBaseMetric = makeStore('baseMetricName');
+  const nameToBaseMetric = makeStore(
+    'baseMetricName',
+    { passableOnly: false }, // Does not seem to be a passable
+  );
   nameToBaseMetric.init(
     'swingset_vat_startup',
     metricMeter.createValueRecorder('swingset_vat_startup', {
