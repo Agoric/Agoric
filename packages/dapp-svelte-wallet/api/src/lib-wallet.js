@@ -103,7 +103,10 @@ export function makeWallet({
   const idToOffer = makeStore('offerId');
   const idToNotifierP = makeStore('offerId');
   /** @type {Store<string, PromiseRecord<any>>} */
-  const idToOfferResultPromiseKit = makeStore('id');
+  const idToOfferResultPromiseKit = makeStore(
+    'id',
+    { passableOnly: false }, // because promise kits are not passables
+  );
 
   /** @type {WeakStore<Handle<'invitation'>, any>} */
   const invitationHandleToOfferResult = makeWeakStore('invitationHandle');
@@ -1130,7 +1133,7 @@ export function makeWallet({
       brand,
       issuer: undefined,
       status: undefined,
-      actions: {
+      actions: Far('payment actions', {
         async deposit(purseOrPetname = undefined) {
           /** @type {Purse} */
           let purse;
@@ -1226,7 +1229,7 @@ export function makeWallet({
           updatePaymentRecord(paymentRecord);
           return true;
         },
-      },
+      }),
     };
 
     payments.init(payment, harden(paymentRecord));
