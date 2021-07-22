@@ -7,6 +7,7 @@ import { E } from '@agoric/eventual-send';
 import { Nat } from '@agoric/nat';
 import { parse as parseMultiaddr } from '@agoric/swingset-vat/src/vats/network/multiaddr';
 import { assertProposalShape } from '@agoric/zoe/src/contractSupport';
+import { Far } from '@agoric/marshal';
 
 import '@agoric/notifier/exported';
 import '@agoric/vats/exported';
@@ -308,7 +309,7 @@ const makePegasus = (zcf, board, namesByAddress) => {
     return peg;
   };
 
-  return harden({
+  return Far('pegasus', {
     makeDenomUri,
     /**
      * Return a handler that can be used with the Network API.
